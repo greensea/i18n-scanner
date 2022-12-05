@@ -51,3 +51,8 @@ i18n-scanner -d src -m my-myessages.json
 }
 ```
 
+## Why Golang?
+
+emmm...Go is simple and quick?
+
+Well, I am feeling frontend stack is not in the right route, the ideas and code are bulging. I the fronend stack is making simple things complex. I can wrote this tool in an hour, but I afraid I can't do the same job with nodejs.
