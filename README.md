@@ -6,35 +6,39 @@ Well, I can't find a handy i18n-scanner for vue with customized translate messag
 ## Usage
 
 Scan messages in `src`
-```
+```shell
 i18n-scanner -d src
 ```
 
-
-Use customized translate function name `$t` (Usually in Vue)
+## Install
+```shell
+go get github.com/greensea/i18n-scanner
 ```
-i18n-scanner -d src -k '\$t'
 
+## More Usage
+Use customized translate function name `$t` (Usually in Vue)
+```shell
 # i18n-scanner use regular expression to parse message, you have to escape the function name manually
+i18n-scanner -d src -k '\$t'
 ```
 
 Use customized translate function name `__`
-```
+```shell
 i18n-scanner -d src -k __
 ```
 
 Specify output languages to `en`, `zh` and `jp`
-```
+```shell
 i18n-scanner -d src -l "en,zh,jp"
 ```
 
 Use previous saved messages file, and keep translated messages.
-```
+```shell
 i18n-scanner -d src -m my-myessages.json
 ```
 
 ## Output Format
-```
+```json
 {
   "en": {
     "Homepage": "",
