@@ -12,7 +12,6 @@ import (
 )
 
 var langArg string
-var langs []string
 var funcKeyword string
 var scanDir string
 var msgFile string
@@ -69,8 +68,6 @@ func main() {
 	flag.StringVar(&scanDir, "d", "", "Directory to scan")
 	flag.StringVar(&msgFile, "m", "messages.json", "Message file")
 
-	langs = strings.Split(langArg, ",")
-
 	flag.Usage = func() {
 		fmt.Printf("i18n-scanner (https://github.com/greensea/i18n-scanner)\n\n")
 		fmt.Printf("Usage: \n  i18n-scanner [OPTIONS] -d <DIR TO SCAN>\n\n")
@@ -93,6 +90,7 @@ func Scan() {
 	f := make(File)
 	f.Load(msgFile)
 
+	langs := strings.Split(langArg, ",")
 	for _, lang := range langs {
 		f.AddLocale(lang)
 	}
