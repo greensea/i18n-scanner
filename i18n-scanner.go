@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -19,12 +21,24 @@ var msgFile string
 // Total number of messages found
 var msgCount int
 
-type File map[string]Messages
+type File struct {
+	Data      map[string]Messages
+	msgOrder  int
+	msgOrders map[string]int
+}
+
 type Messages map[string]string
 
+func NewFile() *File {
+	f := File{}
+	f.Data = make(map[string]Messages)
+	f.msgOrders = make(map[string]int)
+	return &f
+}
+
 // Save messages to path
-func (f File) Save(path string) error {
-	raw, err := json.MarshalIndent(f, "", "  ")
+func (f *File) Save(path string) error {
+	raw, err := f.MarshalJSON()
 	if err != nil {
 		return err
 	}
@@ -33,32 +47,104 @@ func (f File) Save(path string) error {
 	return err
 }
 
+func (f *File) MarshalJSON() ([]byte, error) {
+	// 1. Load keys
+	var locales []string
+	var msgs []string
+
+	for k := range f.Data {
+		locales = append(locales, k)
+
+		for k2 := range f.Data[k] {
+			msgs = append(msgs, k2)
+		}
+	}
+
+	// 2. Sort keys and make them unique
+	msgs = Unique(msgs)
+	sort.Slice(locales, func(i, j int) bool {
+		return strings.Compare(locales[i], locales[j]) < 0
+	})
+	sort.Slice(msgs, func(i, j int) bool {
+		ival, ok1 := f.msgOrders[msgs[i]]
+		jval, ok2 := f.msgOrders[msgs[j]]
+		if ok1 == false || ok2 == false {
+			return strings.Compare(msgs[i], msgs[j]) < 0
+		}
+
+		if ival == jval {
+			return strings.Compare(msgs[i], msgs[j]) < 0
+		}
+
+		return ival < jval
+	})
+
+	buf := &bytes.Buffer{}
+	buf.Write([]byte("{\n"))
+
+	for k1, localeName := range locales {
+		// FIXME: Should handle errors
+		lToken, _ := json.Marshal(localeName)
+		buf.Write([]byte(fmt.Sprintf("  %s: {\n", lToken)))
+
+		for k2, msgName := range msgs {
+			// FIXME: Should handle errors
+			msg, _ := f.Data[localeName][msgName]
+			nameToken, _ := json.Marshal(msgName)
+			msgToken, _ := json.Marshal(msg)
+			buf.Write([]byte(fmt.Sprintf("    %s: %s", nameToken, msgToken)))
+
+			if k2 != len(msgs)-1 {
+				buf.Write([]byte(",\n"))
+			} else {
+				buf.Write([]byte("\n"))
+			}
+		}
+
+		if k1 != len(locales)-1 {
+			buf.Write([]byte("  },\n"))
+		} else {
+			buf.Write([]byte("  }\n"))
+		}
+
+	}
+	buf.Write([]byte("}"))
+
+	return buf.Bytes(), nil
+}
+
 // Load messages from path. All messages will be flushed before load
-func (f File) Load(path string) error {
+func (f *File) Load(path string) error {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(raw, &f)
+	err = json.Unmarshal(raw, &f.Data)
 	return err
 }
 
 // Add a new message. If the message translation is exists, the file is inact
-func (f File) Add(msg string) {
-	for _, v := range f {
+func (f *File) Add(msg string) {
+	for _, v := range f.Data {
 		_, ok := v[msg]
 		if ok != true {
 			v[msg] = ""
 		}
 	}
 
+	_, ok := f.msgOrders[msg]
+	if ok == false {
+		f.msgOrder++
+		f.msgOrders[msg] = f.msgOrder
+	}
+
 }
 
-func (f File) AddLocale(locale string) {
-	_, ok := f[locale]
+func (f *File) AddLocale(locale string) {
+	_, ok := f.Data[locale]
 	if ok == false {
-		f[locale] = make(Messages)
+		f.Data[locale] = make(Messages)
 	}
 }
 
@@ -87,7 +173,7 @@ func main() {
 }
 
 func Scan() {
-	f := make(File)
+	f := NewFile()
 	f.Load(msgFile)
 
 	langs := strings.Split(langArg, ",")
@@ -102,7 +188,7 @@ func Scan() {
 	fmt.Printf("Messages json file saved to %s\n", msgFile)
 }
 
-func ScanDir(f File, path string) {
+func ScanDir(f *File, path string) {
 	entry, err := os.ReadDir(path)
 	if err != nil {
 		log.Printf("Unable to scan %s: %v\n", path, err)
@@ -119,7 +205,7 @@ func ScanDir(f File, path string) {
 	}
 }
 
-func ScanFile(f File, path string) {
+func ScanFile(f *File, path string) {
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("Unable to read file %s: %v\n", path, err)
@@ -166,6 +252,20 @@ func Parse(raw string, funcName string) []string {
 	for _, v := range ret2 {
 		if len(v) >= 2 {
 			ret = append(ret, v[1])
+		}
+	}
+
+	return ret
+}
+
+func Unique(ss []string) []string {
+	u := make(map[string]struct{})
+	var ret []string
+	for _, v := range ss {
+		_, ok := u[v]
+		if ok != true {
+			ret = append(ret, v)
+			u[v] = struct{}{}
 		}
 	}
 

@@ -15,7 +15,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	f := make(File)
+	f := NewFile()
 	d := os.TempDir()
 	p := fmt.Sprintf("%s/i18n-scanner_test-%d.json", d, time.Now().UnixNano())
 
