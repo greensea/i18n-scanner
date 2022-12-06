@@ -31,6 +31,16 @@ func TestFile(t *testing.T) {
 	f.Load(p)
 }
 
+func TestEscapeString(t *testing.T) {
+	str := "\"\\ {\"\\}"
+	ret := EscapeString(str)
+	fmt.Println(str)
+	fmt.Println(ret)
+	if ret != "\"\\\"\\\\ {\\\"\\\\}\"" {
+		t.Fail()
+	}
+}
+
 var sample string = `<script setup>
 import {ref} from 'vue'
 </script>

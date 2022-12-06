@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -83,15 +84,13 @@ func (f *File) MarshalJSON() ([]byte, error) {
 	buf.Write([]byte("{\n"))
 
 	for k1, localeName := range locales {
-		// FIXME: Should handle errors
-		lToken, _ := json.Marshal(localeName)
+		lToken := EscapeString(localeName)
 		buf.Write([]byte(fmt.Sprintf("  %s: {\n", lToken)))
 
 		for k2, msgName := range msgs {
-			// FIXME: Should handle errors
 			msg, _ := f.Data[localeName][msgName]
-			nameToken, _ := json.Marshal(msgName)
-			msgToken, _ := json.Marshal(msg)
+			nameToken := EscapeString(msgName)
+			msgToken := EscapeString(msg)
 			buf.Write([]byte(fmt.Sprintf("    %s: %s", nameToken, msgToken)))
 
 			if k2 != len(msgs)-1 {
@@ -270,4 +269,11 @@ func Unique(ss []string) []string {
 	}
 
 	return ret
+}
+
+// Escape a string to JSON format
+func EscapeString(s string) string {
+	ret := strconv.Quote(s)
+	return ret
+
 }
