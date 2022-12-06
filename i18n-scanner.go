@@ -66,19 +66,6 @@ func (f *File) MarshalJSON() ([]byte, error) {
 	sort.Slice(locales, func(i, j int) bool {
 		return strings.Compare(locales[i], locales[j]) < 0
 	})
-	sort.Slice(msgs, func(i, j int) bool {
-		ival, ok1 := f.msgOrders[msgs[i]]
-		jval, ok2 := f.msgOrders[msgs[j]]
-		if ok1 == false || ok2 == false {
-			return strings.Compare(msgs[i], msgs[j]) < 0
-		}
-
-		if ival == jval {
-			return strings.Compare(msgs[i], msgs[j]) < 0
-		}
-
-		return ival < jval
-	})
 
 	buf := &bytes.Buffer{}
 	buf.Write([]byte("{\n"))
@@ -86,6 +73,36 @@ func (f *File) MarshalJSON() ([]byte, error) {
 	for k1, localeName := range locales {
 		lToken := EscapeString(localeName)
 		buf.Write([]byte(fmt.Sprintf("  %s: {\n", lToken)))
+
+		// Sort again, put un-translate messages at top
+		sort.Slice(msgs, func(i, j int) bool {
+			// Sort by un-translate
+			msgi, _ := f.Data[localeName][msgs[i]]
+			msgj, _ := f.Data[localeName][msgs[j]]
+			ilen := len(msgi)
+			jlen := len(msgj)
+
+			if ilen == 0 && jlen > 0 {
+				return true
+			} else if ilen > 0 && jlen == 0 {
+				return false
+			}
+
+			// Sort by scan order
+			ival, ok1 := f.msgOrders[msgs[i]]
+			jval, ok2 := f.msgOrders[msgs[j]]
+			if ok1 == false || ok2 == false {
+				return strings.Compare(msgs[i], msgs[j]) < 0
+			}
+
+			// Sort by original messages string
+			if ival == jval {
+				return strings.Compare(msgs[i], msgs[j]) < 0
+			}
+
+			return ival < jval
+
+		})
 
 		for k2, msgName := range msgs {
 			msg, _ := f.Data[localeName][msgName]
