@@ -240,16 +240,16 @@ func ScanFile(f *File, path string) {
 func Parse(raw string, funcName string) []string {
 	var ret []string
 
-	// Match _('bla')
-	exp1 := fmt.Sprintf(`%s\([ ]*"(.+)"[ ]*\)`, funcName)
+	// Match _("bla")
+	exp1 := fmt.Sprintf(`%s\([ ]*"(.+)"[ ]*[\,\)]`, funcName)
 	r1, err := regexp.Compile(exp1)
 	if err != nil {
 		fmt.Printf("Unable to compile regular expression %s\nCheck if there are special chars in function name parameter", exp1)
 		os.Exit(0)
 	}
 
-	// Match _("bla")
-	exp2 := fmt.Sprintf(`%s\([ ]*'(.+)'[ ]*\)`, funcName)
+	// Match _('bla')
+	exp2 := fmt.Sprintf(`%s\([ ]*'(.+)'[ ]*[\,\)]`, funcName)
 	r2, err := regexp.Compile(exp2)
 	if err != nil {
 		fmt.Printf("Unable to compile regular expression %s\nCheck if there are special chars in function name parameter", exp1)

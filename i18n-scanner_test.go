@@ -14,6 +14,30 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestGenralMessageFunction(t *testing.T) {
+	ss := []string{
+		`The quick __('fox') jumps over the lazy dog`,
+		`The quick __('fox',3) jumps over the lazy dog`,
+		`The quick __('fox', 3) jumps over the lazy dog`,
+		`The quick __('fox' , 3) jumps over the lazy dog`,
+		`The quick __('fox' ) jumps over the lazy dog`,
+	}
+
+	for _, s := range ss {
+		strs := Parse(s, "__")
+
+		if len(strs) != 1 {
+			fmt.Printf("Faild on `%s`\n", s)
+			t.FailNow()
+		}
+		if strs[0] != "fox" {
+			fmt.Printf("Faild on `%s`\n", s)
+			t.Fail()
+		}
+	}
+
+}
+
 func TestFile(t *testing.T) {
 	f := NewFile()
 	d := os.TempDir()
@@ -34,8 +58,8 @@ func TestFile(t *testing.T) {
 func TestEscapeString(t *testing.T) {
 	str := "\"\\ {\"\\}"
 	ret := EscapeString(str)
-	fmt.Println(str)
-	fmt.Println(ret)
+	// fmt.Println(str)
+	// fmt.Println(ret)
 	if ret != "\"\\\"\\\\ {\\\"\\\\}\"" {
 		t.Fail()
 	}
