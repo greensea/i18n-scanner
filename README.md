@@ -11,9 +11,14 @@ i18n-scanner -d src
 ```
 
 ## Install
+
+Install using go
+
 ```shell
 go get github.com/greensea/i18n-scanner
 ```
+
+You can also download the binary at [Release](https://github.com/greensea/i18n-scanner/releases) page.
 
 ## More Usage
 Use customized translate function name `$t` (Usually in Vue)
