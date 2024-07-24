@@ -15,7 +15,7 @@ i18n-scanner -d src
 Install using go
 
 ```shell
-go get github.com/greensea/i18n-scanner
+go install github.com/greensea/i18n-scanner@latest
 ```
 
 You can also download the binary at [Release](https://github.com/greensea/i18n-scanner/releases) page.
