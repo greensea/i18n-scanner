@@ -38,6 +38,17 @@ func TestGenralMessageFunction(t *testing.T) {
 
 }
 
+func TestMultipleMessagesInSingleLine(t *testing.T) {
+	strs := Parse(`The quick __('fox') jumps __('over') the lazy dog`, "__")
+
+	if len(strs) != 2 {
+		t.FailNow()
+	}
+	if strs[0] != "fox" || strs[1] != "over" {
+		t.FailNow()
+	}
+}
+
 func TestFile(t *testing.T) {
 	f := NewFile()
 	d := os.TempDir()
